@@ -1,0 +1,16 @@
+version: '3'
+
+services:
+  mqtt_broker:
+    image: eclipse-mosquitto:latest
+    ports:
+      - "1883:1883"
+
+  go_application:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mqtt_broker
