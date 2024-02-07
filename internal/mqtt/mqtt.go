@@ -2,9 +2,10 @@ package mqtt
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"time"
-	"fmt"
+
 	"github.com/eclipse/paho.mqtt.golang"
 	"github.com/go-pg/pg/v10"
 	"github.com/mqtt_go_application/pkg/models"
@@ -31,7 +32,8 @@ func InitMQTT(db *pg.DB) error {
 
 		mqttMsg.Timestamp = time.Now()
 
-		err = db.Insert(&mqttMsg)
+		// Insert data into the database
+		_, err = db.Model(&mqttMsg).Insert()
 		if err != nil {
 			log.Printf("Error inserting message to database: %s", err.Error())
 			return
