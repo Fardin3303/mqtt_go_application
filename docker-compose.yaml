@@ -3,8 +3,7 @@ version: '3'
 services:
   mqtt_broker:
     image: eclipse-mosquitto:latest
-    ports:
-      - "1883:1883"
+    command: mosquitto -p 1883
 
   go_application:
     build:
