@@ -4,8 +4,6 @@ import (
 	"log"
 	"os"
 	"os/signal"
-
-	"github.com/go-pg/pg/v10"
 	"github.com/mqtt_go_application/internal/database"
 	"github.com/mqtt_go_application/internal/mqtt"
 	"github.com/mqtt_go_application/api"
