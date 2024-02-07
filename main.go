@@ -13,14 +13,23 @@ import (
 
 func main() {
 	// Connect to Postgres database
-	db := database.ConnectDB()
+	db, err := database.ConnectDB()
+	if err != nil {
+		log.Fatalf("Error connecting to database: %s", err.Error())
+	}
 	defer db.Close()
 
 	// Subscribe to MQTT topic and handle messages
-	mqtt.InitMQTT(db)
+	err = mqtt.InitMQTT(db)
+	if err != nil {
+		log.Fatalf("Error initializing MQTT: %s", err.Error())
+	}
 
 	// Setup and start REST API server
-	api.StartServer(db)
+	err = api.StartServer(db)
+	if err != nil {
+		log.Fatalf("Error starting API server: %s", err.Error())
+	}
 
 	// Graceful termination
 	c := make(chan os.Signal, 1)

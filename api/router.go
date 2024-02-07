@@ -1,12 +1,13 @@
 package api
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/go-pg/pg/v10"
 	"github.com/mqtt_go_application/pkg/models"
 )
 
-func StartServer(db *pg.DB) {
+func StartServer(db *pg.DB) error {
 	r := gin.Default()
 
 	r.GET("/messages", func(c *gin.Context) {
@@ -20,6 +21,8 @@ func StartServer(db *pg.DB) {
 	})
 
 	if err := r.Run(":8080"); err != nil {
-		panic(err)
+		return fmt.Errorf("failed to start server: %w", err)
 	}
+
+	return nil
 }

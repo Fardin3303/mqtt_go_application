@@ -4,19 +4,19 @@ import (
 	"encoding/json"
 	"log"
 	"time"
-
+	"fmt"
 	"github.com/eclipse/paho.mqtt.golang"
 	"github.com/go-pg/pg/v10"
 	"github.com/mqtt_go_application/pkg/models"
 )
 
-func InitMQTT(db *pg.DB) {
+func InitMQTT(db *pg.DB) error {
 	opts := mqtt.NewClientOptions().AddBroker("tcp://mqtt.eclipse.org:1883")
 	opts.SetClientID("go-mqtt-example")
 
 	client := mqtt.NewClient(opts)
 	if token := client.Connect(); token.Wait() && token.Error() != nil {
-		log.Fatalf("Error connecting to MQTT broker: %s", token.Error())
+		return fmt.Errorf("failed to connect to MQTT broker: %w", token.Error())
 	}
 	defer client.Disconnect(250)
 
@@ -39,7 +39,9 @@ func InitMQTT(db *pg.DB) {
 
 		log.Printf("Received message on topic %s: %s\n", msg.Topic(), msg.Payload())
 	}); token.Wait() && token.Error() != nil {
-		log.Fatalf("Error subscribing to MQTT topic %s: %s", topic, token.Error())
+		return fmt.Errorf("failed to subscribe to MQTT topic %s: %w", topic, token.Error())
 	}
 	defer client.Unsubscribe(topic)
+
+	return nil
 }
