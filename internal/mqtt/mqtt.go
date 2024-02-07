@@ -12,7 +12,7 @@ import (
 )
 
 func InitMQTT(db *pg.DB) error {
-	opts := mqtt.NewClientOptions().AddBroker("tcp://mqtt.eclipse.org:1883")
+	opts := mqtt.NewClientOptions().AddBroker("host.docker.internal:1883")
 	opts.SetClientID("go-mqtt-example")
 
 	client := mqtt.NewClient(opts)
