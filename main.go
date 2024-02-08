@@ -17,6 +17,12 @@ func main() {
 	}
 	defer db.Close()
 
+	// Create tables if they don't exist
+	err = database.CreateTables(db)
+	if err != nil {
+		log.Fatalf("Error creating tables: %s", err.Error())
+	}
+
 	// Subscribe to MQTT topic and handle messages
 	err = mqtt.InitMQTT(db)
 	if err != nil {
