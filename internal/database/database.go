@@ -27,15 +27,12 @@ func CreateTables(db *pg.DB) error {
 	fmt.Println("Creating tables...")
 
 	for _, model := range models {
-		fmt.Printf("Creating table for model: %T\n", model)
 		err := db.Model(model).CreateTable(&orm.CreateTableOptions{
 			IfNotExists: true,
 		})
 		if err != nil {
 			return err
 		}
-		fmt.Printf("Created table for model: %T\n", model)
-
 	}
 	return nil
 }
