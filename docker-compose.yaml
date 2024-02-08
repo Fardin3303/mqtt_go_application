@@ -1,9 +1,29 @@
 version: '3'
 
 services:
+  postgres-db:
+    image: postgres:latest
+    container_name: postgres-db
+    environment:
+      POSTGRES_DB: enersense
+      POSTGRES_USER: postgres_user
+      POSTGRES_PASSWORD: postgres_password
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-d" ,"enersense", "-U", "postgres_user"]
+      interval: 10s
+      timeout: 30s
+      retries: 5
+    networks:
+      - app-network
+
   mqtt_broker:
     image: eclipse-mosquitto:latest
     command: mosquitto -p 1883
+    container_name: mqtt_broker
+    networks:
+      - app-network
 
   go_application:
     build:
@@ -12,4 +32,12 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - mqtt_broker
+      postgres-db:
+        condition: service_healthy
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
