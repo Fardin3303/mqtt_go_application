@@ -1,5 +1,5 @@
 # Dockerfile for Go application
-FROM golang:1.20 AS builder
+FROM golang:1.18 AS builder
 
 WORKDIR /app
 
