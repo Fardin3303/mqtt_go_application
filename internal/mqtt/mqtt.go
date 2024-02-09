@@ -13,17 +13,17 @@ import (
 
 // Define a function to attempt reconnection
 func reconnect(client mqtt.Client, opts *mqtt.ClientOptions) {
-    for {
-        // Attempt to connect to the MQTT broker
-        if token := client.Connect(); token.Wait() && token.Error() != nil {
-            log.Printf("Failed to reconnect to MQTT broker: %v", token.Error())
-            // Wait before attempting to reconnect
-            time.Sleep(5 * time.Second)
-        } else {
-            log.Println("Successfully reconnected to the MQTT broker")
-            break
-        }
-    }
+	for {
+		// Attempt to connect to the MQTT broker
+		if token := client.Connect(); token.Wait() && token.Error() != nil {
+			log.Printf("Failed to reconnect to MQTT broker: %v", token.Error())
+			// Wait before attempting to reconnect
+			time.Sleep(5 * time.Second)
+		} else {
+			log.Println("Successfully reconnected to the MQTT broker")
+			break
+		}
+	}
 }
 
 func InitMQTT(db *pg.DB) error {
@@ -57,7 +57,6 @@ func InitMQTT(db *pg.DB) error {
 	} else {
 		log.Printf("Subscribed to MQTT topic: %s\n", topic)
 	}
-    defer client.Unsubscribe(topic)
 
 	// Start a goroutine to publish new sessions every 1 minute
 	go func() {
@@ -128,7 +127,6 @@ func handleMessage(client mqtt.Client, msg mqtt.Message, db *pg.DB) {
 
 	log.Printf("Received message on topic %s: %s\n", msg.Topic(), msg.Payload())
 }
-
 
 // Function to generate a unique session ID
 func generateSessionID() int {
