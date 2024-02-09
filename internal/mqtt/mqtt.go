@@ -30,14 +30,22 @@ func InitMQTT(db *pg.DB) error {
 
 	// Subscribe to the MQTT topic and handle incoming messages
 	topic := "charger/1/connector/1/session/1"
-	if token := client.Subscribe(topic, 0, handleMessage); token.Wait() && token.Error() != nil {
-		return fmt.Errorf("failed to subscribe to MQTT topic %s: %w", topic, token.Error())
+	log.Printf("Subscribing to MQTT topic: %s\n", topic)
+	if token := client.Subscribe(topic, 0, func(client mqtt.Client, msg mqtt.Message) {
+        // Pass db as a parameter to handleMessage function
+        handleMessage(client, msg, db)
+		log.Printf("Received message on topic %s: %s\n", msg.Topic(), msg.Payload())
+    }); token.Wait() && token.Error() != nil {
+		log.Printf("Error subscribing to MQTT topic %s: %v\n", topic, token.Error())
+        return fmt.Errorf("failed to subscribe to MQTT topic %s: %w", topic, token.Error())
+    } else {
+		log.Printf("Subscribed to MQTT topic: %s\n", topic)
 	}
-	defer client.Unsubscribe(topic)
+    defer client.Unsubscribe(topic)
 
 	// Start a goroutine to publish new sessions every 1 minute
 	go func() {
-		ticker := time.NewTicker(1 * time.Minute)
+		ticker := time.NewTicker(5 * time.Second)
 		defer ticker.Stop()
 
 		for {
@@ -82,14 +90,34 @@ func InitMQTT(db *pg.DB) error {
 }
 
 // Function to handle incoming MQTT messages
-func handleMessage(client mqtt.Client, msg mqtt.Message) {
-	
+func handleMessage(client mqtt.Client, msg mqtt.Message, db *pg.DB) {
+	log.Printf("Handling MQTT message: %s\n", msg.Payload())
+	var mqttMsg models.MQTTMessage
+	err := json.Unmarshal(msg.Payload(), &mqttMsg)
+	if err != nil {
+		log.Printf("Error unmarshalling MQTT message: %s", err.Error())
+		return
+	}
+
+	mqttMsg.Timestamp = time.Now()
+
+	// Insert message into the database
+	fmt.Printf("Inserting message into database: %+v\n", mqttMsg)
+	_, err = db.Model(&mqttMsg).Insert()
+	if err != nil {
+		log.Printf("Error inserting message to database: %s", err.Error())
+		return
+	}
+	fmt.Println("Message inserted into database")
+
 	log.Printf("Received message on topic %s: %s\n", msg.Topic(), msg.Payload())
 }
+
 
 // Function to generate a unique session ID
 func generateSessionID() int {
 	// Implement your session ID generation logic here
 	// For simplicity, you can use a timestamp-based ID or a random number generator
 	return int(time.Now().Unix())
+
 }
