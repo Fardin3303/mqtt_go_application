@@ -11,6 +11,21 @@ import (
 	"github.com/mqtt_go_application/pkg/models"
 )
 
+// Define a function to attempt reconnection
+func reconnect(client mqtt.Client, opts *mqtt.ClientOptions) {
+    for {
+        // Attempt to connect to the MQTT broker
+        if token := client.Connect(); token.Wait() && token.Error() != nil {
+            log.Printf("Failed to reconnect to MQTT broker: %v", token.Error())
+            // Wait before attempting to reconnect
+            time.Sleep(5 * time.Second)
+        } else {
+            log.Println("Successfully reconnected to the MQTT broker")
+            break
+        }
+    }
+}
+
 func InitMQTT(db *pg.DB) error {
 	opts := mqtt.NewClientOptions().AddBroker("host.docker.internal:1883")
 	opts.SetClientID("go-mqtt-example")
@@ -21,6 +36,7 @@ func InitMQTT(db *pg.DB) error {
 	opts.SetConnectionLostHandler(func(client mqtt.Client, err error) {
 		log.Printf("Connection lost: %v", err)
 		// Attempt to reconnect here if necessary
+		reconnect(client, opts)
 	})
 
 	// Attempt to connect to the MQTT broker
@@ -32,13 +48,13 @@ func InitMQTT(db *pg.DB) error {
 	topic := "charger/1/connector/1/session/1"
 	log.Printf("Subscribing to MQTT topic: %s\n", topic)
 	if token := client.Subscribe(topic, 0, func(client mqtt.Client, msg mqtt.Message) {
-        // Pass db as a parameter to handleMessage function
-        handleMessage(client, msg, db)
+		// Pass db as a parameter to handleMessage function
 		log.Printf("Received message on topic %s: %s\n", msg.Topic(), msg.Payload())
-    }); token.Wait() && token.Error() != nil {
+		handleMessage(client, msg, db)
+	}); token.Wait() && token.Error() != nil {
 		log.Printf("Error subscribing to MQTT topic %s: %v\n", topic, token.Error())
-        return fmt.Errorf("failed to subscribe to MQTT topic %s: %w", topic, token.Error())
-    } else {
+		return fmt.Errorf("failed to subscribe to MQTT topic %s: %w", topic, token.Error())
+	} else {
 		log.Printf("Subscribed to MQTT topic: %s\n", topic)
 	}
     defer client.Unsubscribe(topic)
