@@ -4,12 +4,19 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"sync"
 	"time"
 
 	"github.com/eclipse/paho.mqtt.golang"
 	"github.com/go-pg/pg/v10"
 	"github.com/mqtt_go_application/pkg/models"
 )
+
+// SessionIDGenerator represents a generator for unique session IDs
+type SessionIDGenerator struct {
+	counter int
+	mu      sync.Mutex // for thread safety
+}
 
 // Define a function to attempt reconnection
 func reconnect(client mqtt.Client, opts *mqtt.ClientOptions) {
@@ -59,8 +66,9 @@ func InitMQTT(db *pg.DB) error {
 	}
 
 	// Start a goroutine to publish new sessions every 1 minute
+	generator := NewSessionIDGenerator()
 	go func() {
-		ticker := time.NewTicker(5 * time.Second)
+		ticker := time.NewTicker(60 * time.Second)
 		defer ticker.Stop()
 
 		for {
@@ -74,7 +82,7 @@ func InitMQTT(db *pg.DB) error {
 
 				// Create a new session message
 				sessionMsg := models.MQTTMessage{
-					SessionID:            generateSessionID(),
+					SessionID:            generator.GenerateSessionID(),
 					EnergyDeliveredInKWh: 30,
 					DurationInSeconds:    45,
 					SessionCostInCents:   70,
@@ -128,10 +136,18 @@ func handleMessage(client mqtt.Client, msg mqtt.Message, db *pg.DB) {
 	log.Printf("Received message on topic %s: %s\n", msg.Topic(), msg.Payload())
 }
 
-// Function to generate a unique session ID
-func generateSessionID() int {
-	// Implement your session ID generation logic here
-	// For simplicity, you can use a timestamp-based ID or a random number generator
-	return int(time.Now().Unix())
+// NewSessionIDGenerator creates a new session ID generator
+func NewSessionIDGenerator() *SessionIDGenerator {
+	return &SessionIDGenerator{
+		counter: 1, // start from 1
+	}
+}
 
+// GenerateSessionID generates a unique session ID
+func (gen *SessionIDGenerator) GenerateSessionID() int {
+	gen.mu.Lock()
+	defer gen.mu.Unlock()
+	id := gen.counter
+	gen.counter++
+	return id
 }
