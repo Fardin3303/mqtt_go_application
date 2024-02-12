@@ -1,5 +1,7 @@
 # MQTT Go Application
 
+## Description
+
 This is a Go application that connects to an MQTT broker, subscribes to a specific topic, and saves the received messages to a PostgreSQL database. It also provides a REST API to retrieve the stored messages.
 
 ## Instructions
