@@ -3,9 +3,10 @@ package database
 import (
 	"errors"
 	"fmt"
-	"github.com/mqtt_go_application/pkg/models"
-	"github.com/go-pg/pg/v10/orm"
+
 	"github.com/go-pg/pg/v10"
+	"github.com/go-pg/pg/v10/orm"
+	"github.com/mqtt_go_application/pkg/models"
 )
 
 func ConnectDB() (*pg.DB, error) {
@@ -13,7 +14,7 @@ func ConnectDB() (*pg.DB, error) {
 		Addr:     "host.docker.internal:5432",
 		User:     "postgres_user",
 		Password: "postgres_password",
-		Database: "enersense",
+		Database: "postgres_db",
 	})
 	if db == nil {
 		return nil, errors.New("failed to connect to database")
